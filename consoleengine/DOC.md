@@ -1,13 +1,13 @@
 # PythonProjects/consoleengine/
 **Requires keyboard**
-*A ConsoleEngine designed after javidx9's, but no tutorial was followed, I just added some rasterizers and functionality. Very much unfinished.*
+*A ConsoleEngine designed after javidx9's, but no tutorial was followed, I just added some rasterizers and functionality. Very much unfinished. Haven't found a way to support OOP yet.*
 
 ## ConsoleEngine.py
 - *FORMAT* : get your ANSI sequences here, actually, don't. This breaks the engine.
 - *PIXEL_TYPE* : get your 4 pixel shades here --> PIXEL_SOLID, PIXEL_THREEQUARTERS, PIXEL_HALF, PIXEL_QUARTER
-- *ConsoleEngine* : Main console engine class.
+- *ConsoleGame* : Main console engine class.
 
-### *ConsoleEngine* class
+### *ConsoleGame* class
 - **Hidden** : hidden functions and variables
   - **root** - 2d array holding screen information
   - **tp1/tp2** - deltatime setup (do not use for deltatime)
@@ -20,7 +20,7 @@
   - ***__FillBottomFlatTriangle(v1, v2, v3, char, rawc)*** - Fill flat bottom triangle
   - ***__FillTopFlatTriangle(v1, v2, v3, char, rawc)*** - Fill flat top triangle
   
-- `OnUserCreate(func)` : used to decorate for setup. Use this decorator to setup the game, options to enable/disable:
+- `OnUserCreate(func)` : used to decorate for setup. Use this decorator to setup the game. Passes the ConsoleGame to the function it decorates. Options to enable/disable:
   - **title** - _string_ window title, use `%fps%` to display the fps
   - **fpsInTitle** - _bool_ if you do not want to replace `%fps%` with the fps or it is not present, set to False to save a few frames.
   - **geometry** - _tuple_ window size as `(width, height)`
@@ -30,7 +30,7 @@
   - **active** - _bool_ whether or not to loop
   - **safeSizing** - _int_ padding on bottom and right side to stop scrolling
  
-- `OnUserUpdate(func)` : used to decorate for every frame, all deltatime, frame clearing and updating is handled by this function.
+- `OnUserUpdate(func)` : used to decorate for every frame, all deltatime, frame clearing and updating is handled by this function.  Passes the ConsoleGame to the function it decorates. 
 
 - `Pixel(pos, char, place, rawc, fsp)` : places or checks a pixel. 
   - **pos** as (x, y), **char** as string, **place** as bool, **rawc** not used, **fsp** as bool
@@ -79,4 +79,46 @@
   - **radius** radius of circle
   - **char** character for borders, you can use PIXEL_TYPEs
   - **fill** character for fill, you can use PIXEL_TYPEs, leave as `" "` for no fill
+
 - `Keyboard(key)` : returns True or False for whether or not a key is held. Uses `keyboard.is_pressed()`.
+
+## Example Program
+```python
+# Import ConsoleEngine
+import ConsoleEngine, time, os
+global playerX, playerY
+
+# Quick references for pixel types
+l4 = ConsoleEngine.PIXEL_TYPE.PIXEL_SOLID;l3 = ConsoleEngine.PIXEL_TYPE.PIXEL_THREEQUARTERS;l2 = ConsoleEngine.PIXEL_TYPE.PIXEL_HALF;l1 = ConsoleEngine.PIXEL_TYPE.PIXEL_QUARTER
+
+playersprite = [
+  ["",l4,l4,""],
+  [l4,l2,l1,l4],
+  [l4,l1,l2,l4],
+  ["",l4,l4,""]
+]
+master = ConsoleEngine.ConsoleGame()
+playerX = 1
+playerY = 1
+
+# Decorate w/ OnUserCreate, this will execute once at the start of the program
+@master.OnUserCreate
+def setup(self): # !!! *self* is *master*, this is passed by OnUserCreate. 
+  self.title = "Player Movement"
+  self.geometry = (150, 150)
+  self.fpsInTitle = False
+  
+# Decorate w/ OnUserUpdate, this will execute once every frame
+@master.OnUserUpdate
+def loop(self): # !!! *self* is *master*, this is passed by OnUserUpdate. 
+  global playerX, playerY
+  
+  if self.Keyboard('w'): playerY -= 1
+  if self.Keyboard('s'): playerY += 1
+  if self.Keyboard('a'): playerX -= 1
+  if self.Keyboard('d'): playerX += 1
+  if self.Keyboard('x'): self.active = False
+  
+  self.DrawBox((0,0), (self.geometry[0] - 1, self.geometry[1] -1))
+  self.DrawSprite((playerX, playerY), playersprite)
+```
