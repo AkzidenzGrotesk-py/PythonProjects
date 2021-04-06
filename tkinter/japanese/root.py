@@ -126,7 +126,7 @@ class Window:
         self.__func__()
 
     def __loadscores__(self):
-        with open('scores.jap') as json_file:
+        with open('scores.j') as json_file:
             self.scores = json.load(json_file)
 
     def __widgets__(self):
