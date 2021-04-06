@@ -1,0 +1,29 @@
+{
+  "title" : "3d Graphics Engine - FPS: %fps%",
+  "icon" : "assets/wireframe_cube.png",
+  "size" : [640, 600],
+  "modelData" : {
+	  "file" : [],
+	  "offsets" : [],
+	  "rotations" : [],
+	  "preloadedb" : []
+  },
+  "floor" : [-2, -5, 2],
+  "wireFrame" : false,
+  "wireFrameColour" : [255, 0, 0],
+  "constantFPS" : true,
+  "showClipping" : false,
+  "roundFPS" : 2,
+  "controls" : {
+    "quit" : "x",
+    "up" : " ",
+    "down" : "lshift",
+	"left" : "a",
+	"right" : "d",
+	"forward" : "w",
+	"backwards" : "s",
+	"sprint" : "lctrl",
+	"lrsensitivity" : 2,
+	"udsensitivity" : 2
+  }
+}
