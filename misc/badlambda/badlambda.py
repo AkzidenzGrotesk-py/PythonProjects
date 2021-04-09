@@ -9,3 +9,8 @@ import urllib3;from bs4 import BeautifulSoup;getcontents = lambda url:BeautifulS
 # Generate (pseudo) random numbers using Lehmer and Wyhash (very bad, see lemire.py)
 wyhash32 = lambda seed: (((((seed * 0x4a39b70d) >> 32) ^ (seed * 0x4a39b70d)) * 0x12fad5c9) >> 32) ^ ((((seed * 0x4a39b70d) >> 32) ^ (seed * 0x4a39b70d)) * 0x12fad5c9)
 lehmer32 = lambda seed: (seed * 0xe120fc15) >> 32
+
+# star
+from re import sub, compile
+star = lambda c: sub(compile('[\'\,\]\[]|_'), '', str([["*" for i in range(j)] for j in range(1,c+1)]).replace("], ","\n"))
+# print(star(6))
