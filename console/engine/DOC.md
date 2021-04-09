@@ -131,6 +131,18 @@ pause
   - **pos** as (x, y), **chararray** as a 2d array
   - **pos** top-left position of sprite
   - **chararray** sprite: of strings (each a pixel): `[["#","#"],["#","#"]]`
+  - **tip!** you can use colours with sprites, don't forget to reset after though:
+``` python
+x = f"{FORMAT.FG_RED}{PIXEL_TYPE.PIXEL_SOLID}{FORMAT.RESET}"
+y = ""
+sprite = [
+  [x,y,y,y,x],# > #   #
+  [y,x,y,x,y],# >  # #
+  [y,y,x,y,y],# >   #
+  [y,x,y,x,y],# >  # #
+  [x,y,y,y,x] # > #   #
+]
+```
   
 - `DrawCircle(centerpos, radius, char, fill, rawc, rawf)` : draws a circle
   - **centerpos** as (x, y), **radius** as an integer, **char/fill** as string (PIXEL_TYPEs accepted)
