@@ -95,7 +95,6 @@
 ```python
 # Import ConsoleEngine
 import ConsoleEngine, time, os
-global playerX, playerY
 
 # Quick references for pixel types
 l4 = ConsoleEngine.PIXEL_TYPE.PIXEL_SOLID;l3 = ConsoleEngine.PIXEL_TYPE.PIXEL_THREEQUARTERS;l2 = ConsoleEngine.PIXEL_TYPE.PIXEL_HALF;l1 = ConsoleEngine.PIXEL_TYPE.PIXEL_QUARTER
@@ -107,8 +106,6 @@ playersprite = [
   ["",l4,l4,""]
 ]
 master = ConsoleEngine.ConsoleGame()
-playerX = 1
-playerY = 1
 
 # Decorate w/ OnUserCreate, this will execute once at the start of the program
 @master.OnUserCreate
@@ -116,18 +113,18 @@ def setup(self): # !!! *self* is *master*, this is passed by OnUserCreate.
   self.title = "Player Movement"
   self.geometry = (150, 150)
   self.fpsInTitle = False
+  self.playerX = 1 # assign things to the master!
+  self.playerY = 1
   
 # Decorate w/ OnUserUpdate, this will execute once every frame
 @master.OnUserUpdate
-def loop(self): # !!! *self* is *master*, this is passed by OnUserUpdate. 
-  global playerX, playerY
-  
-  if self.Keyboard('w'): playerY -= 1
-  if self.Keyboard('s'): playerY += 1
-  if self.Keyboard('a'): playerX -= 1
-  if self.Keyboard('d'): playerX += 1
+def loop(self): # !!! *self* is *master*, this is passed by OnUserUpdate.   
+  if self.Keyboard('w'): self.playerY -= 1
+  if self.Keyboard('s'): self.playerY += 1
+  if self.Keyboard('a'): self.playerX -= 1
+  if self.Keyboard('d'): self.playerX += 1
   if self.Keyboard('x'): self.active = False
   
   self.DrawBox((0,0), (self.geometry[0] - 1, self.geometry[1] -1))
-  self.DrawSprite((playerX, playerY), playersprite)
+  self.DrawSprite((self.playerX, self.playerY), playersprite)
 ```
