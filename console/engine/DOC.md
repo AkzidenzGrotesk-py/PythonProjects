@@ -17,7 +17,7 @@ pause
 
 ## ConsoleEngine.py
 - *FORMAT* : get your ANSI sequences here. **Use only for sprites, as other uses can cause breakages. Use *StringToSprite* for other senarios.**
-```
+```python
     RESET=              "\033[0m" # reset
     UNDERLINE=          "\033[4m" # apply underline
     NOUNDERLINE=        "\033[24m" # remove underline
