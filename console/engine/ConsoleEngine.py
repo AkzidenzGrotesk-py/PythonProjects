@@ -1,6 +1,7 @@
-import os, time, keyboard, math
+import os, time, keyboard, math, mouse
+from pynput.mouse import *
 
-# FORMAT CAUSES MANY BUGS
+# FORMAT CAUSES MANY BUGS --> USE StringToSprite() to convert and apply colour
 class FORMAT:
     RESET=              "\033[0m"
     UNDERLINE=          "\033[4m"
@@ -40,6 +41,14 @@ class FORMAT:
     BG_YELLOW=          "\033[103m"
     BG_WHITE=           "\033[47m"
 
+    @staticmethod
+    def FG_RGB(r:int, g:int, b:int) -> str:
+        return f"\033[38;2;{r};{g};{b}m"
+
+    @staticmethod
+    def BG_RGB(r:int, g:int, b:int) -> str:
+        return f"\033[48;2;{r};{g};{b}m"
+
 class PIXEL_TYPE:
     PIXEL_SOLID = chr(0x2588)
     PIXEL_THREEQUARTERS = chr(0x2593)
@@ -65,6 +74,7 @@ class ConsoleGame:
         self.active = True
         self.safeSizing = 1
         self.root = [[self.emptychar for i in range(self.geometry[0])] for i in range(self.geometry[1] + 1)]
+        self.lettersize = (8, 8)
 
         # Setup deltatime
         self.tp1 = time.monotonic()
@@ -121,7 +131,7 @@ class ConsoleGame:
         self.root = [[self.emptychar for i in range(self.geometry[0])] for i in range(self.geometry[1])]
 
     # Bresenham algorithm for generating lines
-    def __Bresenham(self, start, end):
+    def __Bresenham(self, start: tuple, end: tuple):
         # Setup initial conditions
         x1, y1 = start
         x2, y2 = end
@@ -168,7 +178,7 @@ class ConsoleGame:
         return points
 
     # Mid point circle algorithm --> https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
-    def __MidPointCircle(self, centerpos, radius):
+    def __MidPointCircle(self, centerpos: tuple, radius: int):
         x = radius
         y = 0
         points = [(x + centerpos[0], y + centerpos[1])]
@@ -201,7 +211,7 @@ class ConsoleGame:
         return points
 
     # Fill circle
-    def __FillCircleWithEdge(self, points, char = PIXEL_TYPE.PIXEL_SOLID, rawc = False):
+    def __FillCircleWithEdge(self, points: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, rawc: bool = False):
         # Sort points into sublists by Y position
         points.sort(key = lambda e: e[1])
         spoints = []
@@ -222,7 +232,7 @@ class ConsoleGame:
             self.DrawRawLine((pleft, y_sets[0][1]), (pright, y_sets[0][1]), char = char, rawc = True)
 
     # Convert special character symbols from codes to string
-    def __CharConvert(self, char):
+    def __CharConvert(self, char: str):
         if char[:2] == "&L":
             lum = int(char[2:])
             if lum == 4: char = "█"
@@ -235,7 +245,7 @@ class ConsoleGame:
     # Mathamatical functions from
     # http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
     # to fill in triangles (need fill flat bottom and top for this algorithm)
-    def __FillBottomFlatTriangle(self, v1, v2, v3, char = PIXEL_TYPE.PIXEL_SOLID, rawc = False):
+    def __FillBottomFlatTriangle(self, v1: tuple, v2: tuple, v3: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, rawc: bool = False):
         invslope1 = (v2[0] - v1[0]) / (v2[1] - v1[1])
         invslope2 = (v3[0] - v1[0]) / (v3[1] - v1[1])
 
@@ -246,7 +256,7 @@ class ConsoleGame:
             self.DrawRawLine((curx1, scanlineY), (curx2, scanlineY), char = char, rawc = True)
             curx1 += invslope1
             curx2 += invslope2
-    def __FillTopFlatTriangle(self, v1, v2, v3, char = PIXEL_TYPE.PIXEL_SOLID, rawc = False):
+    def __FillTopFlatTriangle(self, v1: tuple, v2: tuple, v3: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, rawc: bool = False):
         invslope1 = (v3[0] - v1[0]) / (v3[1] - v1[1])
         invslope2 = (v3[0] - v2[0]) / (v3[1] - v2[1])
 
@@ -262,7 +272,7 @@ class ConsoleGame:
             scanlineY -= 1
 
     # Place a /char/ at /pos/, check pixel using /place/ --- /fsp/ forces all text into one string
-    def Pixel(self, pos, char = PIXEL_TYPE.PIXEL_SOLID, place = True, rawc = False, fsp = False):
+    def Draw(self, pos: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, place: bool = True, rawc: bool = False, fsp: bool = False):
         if pos[0] > (self.geometry[0] - 1) or pos[1] > (self.geometry[1] - 1) or pos[0] < 0 or pos[1] < 0:
             return False
 
@@ -272,27 +282,34 @@ class ConsoleGame:
                 for c in char:
                     if pos[0] + r > (self.geometry[0] - 1) or pos[1] > (self.geometry[1] - 1) or pos[0] < 0 or pos[1] < 0:
                         return False
-                    self.root[pos[1]][pos[0]+r] = c
+                    self.root[int(pos[1])][int(pos[0])+r] = c
                     r += 1
 
-            else: self.root[pos[1]][pos[0]] = char
+            else: self.root[int(pos[1])][int(pos[0])] = char
         else:
-            if self.root[pos[1]][pos[0]] == char:
+            if self.root[int(pos[1])][int(pos[0])] == char:
                 return True
 
+    # Convert string --> functional with colour
+    def StringToSprite(self, string: str = PIXEL_TYPE.PIXEL_SOLID, effects: str = FORMAT.FG_RED) -> list:
+        string = [[s for s in string]]
+        string[0][0] = effects + string[0][0]
+        string[0][-1] += FORMAT.RESET
+        return string
+
     # Replace the entire screen array with /plan/
-    def RootArray(self, plan = []):
+    def RootArray(self, plan: list = []):
         if plan != []: self.root = plan
 
     # Draw a line from /pos1/ to /pos2/ with /char/ and use /rawc/ to toggle char conversion
-    def DrawRawLine(self, pos1, pos2, char = PIXEL_TYPE.PIXEL_SOLID, rawc = False):
+    def DrawRawLine(self, pos1: tuple, pos2: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, rawc: bool = False):
         for point in self.__Bresenham(pos1, pos2):
-            self.Pixel(point, char, fsp = True)
+            self.Draw(point, char, fsp = True)
 
     # Draw line /thickness/
-    def DrawLine(self, pos1, pos2, char = PIXEL_TYPE.PIXEL_SOLID, thickness = 1, rawc = False):
+    def DrawLine(self, pos1: tuple, pos2: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, thickness: int = 1, rawc: bool = False):
         if pos1 == pos2:
-            self.Pixel(pos1, char = char, fsp = True)
+            self.Draw(pos1, char = char, fsp = True)
             return True
 
         try: slope = (pos2[1] - pos1[1]) / (pos2[0] - pos1[0])
@@ -306,7 +323,7 @@ class ConsoleGame:
             for i in range(thickness): self.DrawRawLine((pos1[0]+i,pos1[1]+i), (pos2[0]+i, pos2[1]+i), char)
 
     # Draw a box at /pos/ sized /size/ with /char/, optional /fill/ to fill with a character. /rawc/ + /rawf/ to toggle char conversion
-    def DrawBox(self, pos, size, char = PIXEL_TYPE.PIXEL_SOLID, fill = " ", thickness = 1, rawc = False, rawf = False):
+    def DrawBox(self, pos: tuple, size: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, fill: str = " ", thickness: int = 1, rawc: bool = False, rawf: bool = False):
         point1 = pos
         point2 = (pos[0], pos[1] + size[1])
         point3 = (pos[0] + size[0], pos[1] + size[1])
@@ -315,7 +332,7 @@ class ConsoleGame:
         if fill != " " or rawf:
             for x in range(pos[0] + 1, size[0]):
                 for y in range(pos[1] + 1, size[1]):
-                    self.Pixel((x, y), char = fill, fsp = True)
+                    self.Draw((x, y), char = fill, fsp = True)
 
         if thickness == 1:
             self.DrawRawLine(point1, point2, char = char, rawc = True)
@@ -335,7 +352,7 @@ class ConsoleGame:
                             char = char, rawc = True, thickness = thickness)
 
     # Draw a triangle with points /pos1/ /pos2/ /pos3/ with /char/, /rawc/ to toggle char conversion.
-    def DrawTriangle(self, pos1, pos2, pos3, char = PIXEL_TYPE.PIXEL_SOLID, fill = " ", thickness = 1, rawc = False, rawf = False):
+    def DrawTriangle(self, pos1: tuple, pos2: tuple, pos3: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, fill: str = " ", thickness: int = 1, rawc: bool = False, rawf: bool = False):
         poss = [pos1, pos2, pos3]
         poss.sort(key = lambda e: e[1])
         pos1, pos2, pos3 = poss[0], poss[1], poss[2]
@@ -361,21 +378,36 @@ class ConsoleGame:
             self.DrawLine(pos1, pos3, char = char, rawc = True, thickness = thickness)
 
     # Draw sprite from array
-    def DrawSprite(self, pos, chararray = []):
+    def DrawSprite(self, pos: tuple, chararray: list = []):
         for y, line in enumerate(chararray):
             for x, pixel in enumerate(line):
-                if pixel != "": self.Pixel((pos[0] + x, pos[1] + y), char = pixel)
+                if pixel != "": self.Draw((pos[0] + x, pos[1] + y), char = pixel, fsp = True)
 
     # Circle centered at /centerpos/ with rad /radius/ drawn with /char/ and filled with /fill/
-    def DrawCircle(self, centerpos, radius, char = PIXEL_TYPE.PIXEL_SOLID, fill = " ", rawc = False, rawf = False):
+    def DrawCircle(self, centerpos: tuple, radius: int, char: str = PIXEL_TYPE.PIXEL_SOLID, fill: str = " ", rawc: bool = False, rawf: bool = False):
         circleedge = self.__MidPointCircle(centerpos, radius)
 
         if fill != " " or rawf:
             self.__FillCircleWithEdge(circleedge, char = fill, rawc = True)
 
         for point in circleedge:
-            self.Pixel(point, char, fsp = True)
+            self.Draw(point, char, fsp = True)
+
+    # Draw polygon
+    def DrawPolygon(self, points: list, char: str = PIXEL_TYPE.PIXEL_SOLID, fill: str = " ", thickness: int = 1, rawc: bool = False, rawf:bool = False):
+        prv = points[-1]
+        for p in points:
+            self.DrawLine(prv, p, char = char, thickness = thickness)
+
+            prv = p
 
     # Keyboard detection
     def Keyboard(self, key):
         return keyboard.is_pressed(key)
+
+    # Mouse
+    def GetMousePos(self, adjusted = True):
+        m = mouse.get_position()
+        if adjusted:
+            return (m[0] / self.lettersize[0], m[1] / self.lettersize[1])
+        return m
