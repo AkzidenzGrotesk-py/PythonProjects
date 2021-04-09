@@ -29,6 +29,7 @@
   - **clear** - _bool_ if the console should be autocleared
   - **active** - _bool_ whether or not to loop
   - **safeSizing** - _int_ padding on bottom and right side to stop scrolling
+  - **lettersize** - _tuple_ character size (of monospaced) as `(width, height)`
  
 - `OnUserUpdate(func)` : used to decorate for every frame, all deltatime, frame clearing and updating is handled by this function.  Passes the ConsoleGame to the function it decorates. 
 
@@ -80,7 +81,15 @@
   - **char** character for borders, you can use PIXEL_TYPEs
   - **fill** character for fill, you can use PIXEL_TYPEs, leave as `" "` for no fill
 
+- `StringToSprite(string, effects)` : get a coloured/formatted version of a string compatible with display
+  - **string/effects** as string
+  - **string** string to convert with formatting
+  - **effects** ANSI escape sequence colours for display (use FORMAT)
+  - _Use DrawSprite() with the `chararray` as the returned value from StringToSprite()_
+
 - `Keyboard(key)` : returns True or False for whether or not a key is held. Uses `keyboard.is_pressed()`.
+
+- `GetMousePos(adjusted)` : returns mouse position (divided by font size if **adjusted**)
 
 ## Example Program
 ```python
