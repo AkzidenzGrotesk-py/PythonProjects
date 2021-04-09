@@ -2,6 +2,19 @@
 **Requires keyboard, mouse**
 *A ConsoleEngine designed after javidx9's, but no tutorial was followed, I just added some rasterizers and functionality. Very much unfinished. Haven't found a way to support OOP yet.*
 
+## Setting Up the Console
+To set up a ConsoleEngine game to work, you have to setup some files. *Windows only?*
+1. Create file *\[gamename\].bat* in the directory with your python file and add code:
+```batch
+@echo off
+python [pythonfile].py
+
+pause
+```
+2. Create a shortcut from said .bat file and right-click > Properties
+3. Click *Font*, scroll in the Font menu and select *Raster Fonts*. In *Size* select 8x8 (to create square pixels, not oblong ones).
+4. Under *Shortcut* click *Change Icon...* at the bottom to change the file and window icon.
+
 ## ConsoleEngine.py
 - *FORMAT* : get your ANSI sequences here, actually, don't. This breaks the engine.
 - *PIXEL_TYPE* : get your 4 pixel shades here --> PIXEL_SOLID, PIXEL_THREEQUARTERS, PIXEL_HALF, PIXEL_QUARTER
