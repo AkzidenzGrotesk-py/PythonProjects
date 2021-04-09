@@ -1,5 +1,5 @@
 # PythonProjects/consoleengine/
-**Requires keyboard**
+**Requires keyboard, mouse**
 *A ConsoleEngine designed after javidx9's, but no tutorial was followed, I just added some rasterizers and functionality. Very much unfinished. Haven't found a way to support OOP yet.*
 
 ## ConsoleEngine.py
