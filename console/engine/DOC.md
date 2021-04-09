@@ -16,7 +16,52 @@ pause
 4. Under *Shortcut* click *Change Icon...* at the bottom to change the file and window icon.
 
 ## ConsoleEngine.py
-- *FORMAT* : get your ANSI sequences here, actually, don't. This breaks the engine.
+- *FORMAT* : get your ANSI sequences here. **Use only for sprites, as other uses can cause breakages. Use *StringToSprite* for other senarios.**
+```
+    RESET=              "\033[0m" # reset
+    UNDERLINE=          "\033[4m" # apply underline
+    NOUNDERLINE=        "\033[24m" # remove underline
+    BOLD=               "\033[1m" # apply bold/bright
+    NOBOLD=             "\033[22m" # remove bold/bright
+    NEGATIVE=           "\033[7m" # flip background/foreground
+    POSITIVE=           "\033[27m" # return background/foreground to normal
+    FG_BLACK=           "\033[30m" # set foreground to black
+    FG_DARK_BLUE=       "\033[34m" # ----------------- dark blue
+    FG_DARK_GREEN=      "\033[32m" # ----------------- dark green
+    FG_DARK_CYAN=       "\033[36m" # ----------------- dark cyan
+    FG_DARK_RED=        "\033[31m" # ----------------- dark red
+    FG_DARK_MAGENTA=    "\033[35m" # ----------------- dark magenta
+    FG_DARK_YELLOW =    "\033[33m" # ----------------- dark yellow
+    FG_BBLACK=          "\033[90m" # ----------------- dark gray (?)
+    FG_BLUE=            "\033[94m" # ----------------- blue
+    FG_GREEN=           "\033[92m" # ----------------- green
+    FG_CYAN=            "\033[96m" # ----------------- cyan
+    FG_RED=             "\033[91m" # ----------------- red
+    FG_MAGENTA=         "\033[95m" # ----------------- magenta
+    FG_YELLOW=          "\033[93m" # ----------------- yellow
+    FG_WHITE=           "\033[37m" # ----------------- white
+    BG_BLACK=           "\033[40m" # set background to black
+    BG_DARK_BLUE=       "\033[44m" # ----------------- dark blue
+    BG_DARK_GREEN=      "\033[42m" # ----------------- dark green
+    BG_DARK_CYAN=       "\033[46m" # ----------------- dark cyan
+    BG_DARK_RED=        "\033[41m" # ----------------- dark red
+    BG_DARK_MAGENTA=    "\033[45m" # ----------------- dark magenta
+    BG_DARK_YELLOW=     "\033[43m" # ----------------- dark yellow
+    BG_BBLACK=          "\033[100m" # ---------------- dark gray (?)
+    BG_BLUE=            "\033[104m" # ---------------- blue
+    BG_GREEN=           "\033[102m" # ---------------- green
+    BG_CYAN=            "\033[106m" # ---------------- cyan
+    BG_RED=             "\033[101m" # ---------------- red
+    BG_MAGENTA=         "\033[105m" # ---------------- magenta
+    BG_YELLOW=          "\033[103m" # ---------------- yellow
+    BG_WHITE=           "\033[47m"  # ---------------- white
+    
+    def FG_RGB(r:int, g:int, b:int) -> str: # get custom RGB for foreground (r, g, b)
+        return f"\033[38;2;{r};{g};{b}m"
+
+    def BG_RGB(r:int, g:int, b:int) -> str: # get custom RGB for background (r, g, b)
+        return f"\033[48;2;{r};{g};{b}m"
+```
 - *PIXEL_TYPE* : get your 4 pixel shades here --> PIXEL_SOLID, PIXEL_THREEQUARTERS, PIXEL_HALF, PIXEL_QUARTER
 - *ConsoleGame* : Main console engine class.
 
