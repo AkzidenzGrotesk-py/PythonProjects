@@ -62,6 +62,7 @@ pause
     def BG_RGB(r:int, g:int, b:int) -> str: # get custom RGB for background (r, g, b)
         return f"\033[48;2;{r};{g};{b}m"
 ```
+  - **Enabling ANSI on Windows 10:** In the Registry Editor under HKCU (HKEY_CURRENT_USER) and in Console, create a DWORD called "VirtualTerminalLevel" and set it to "0x1".
 - *PIXEL_TYPE* : get your 4 pixel shades here --> PIXEL_SOLID, PIXEL_THREEQUARTERS, PIXEL_HALF, PIXEL_QUARTER
 - *ConsoleGame* : Main console engine class.
 
