@@ -72,16 +72,16 @@ pause
   - **tp1/tp2** - deltatime setup (do not use for deltatime)
   - **fElapsedTime** - deltatime (time of frame)
   - ***__ClearRoot()*** - Clear the root array
-  - ***__Bresenham(start, end)*** - Bresenham algorithm for generating lines
-  - ***__MidPointCircle(centerpos, radius)*** - Mid-point circle algorithm for circle outlines
-  - ***__FillCircleWithEdge(points, char, rawc)*** - Fill a mid-point circle edge
   - ***__CharConvert(char)*** - Converts codes to string (not in use)
-  - ***__FillBottomFlatTriangle(v1, v2, v3, char, rawc)*** - Fill flat bottom triangle
-  - ***__FillTopFlatTriangle(v1, v2, v3, char, rawc)*** - Fill flat top triangle
+- **Numba Jit** : functions for complex calculations
+  - ***jitBresenham(start, end)*** - Bresenham algorithm for generating lines
+  - ***jitMidPointCircle(centerpos, radius)*** - Mid-point circle algorithm for circle outlines
+  - ***jitFillCircleWithEdge(points)*** - Fill a mid-point circle edge, returns line points
+  - ***jitFillBottomFlatTriangle(v1, v2, v3)*** - Fill flat bottom triangle, returns line points
+  - ***jitFillTopFlatTriangle(v1, v2, v3)*** - Fill flat top triangle, returns line points
   
 - `OnUserCreate(func)` : used to decorate for setup. Use this decorator to setup the game. Passes the ConsoleGame to the function it decorates. Options to enable/disable:
-  - **title** - _string_ window title, use `%fps%` to display the fps
-  - **fpsInTitle** - _bool_ if you do not want to replace `%fps%` with the fps or it is not present, set to False to save a few frames.
+  - **title** - _string_ window title
   - **geometry** - _tuple_ window size as `(width, height)`
   - **emptychar** - _string_ character to clear the screen with
   - **colorsetting** - _string_ color of the console as two hexadecimals. e.g. `0f`
@@ -152,8 +152,9 @@ sprite = [
   - **char** character for borders, you can use PIXEL_TYPEs
   - **fill** character for fill, you can use PIXEL_TYPEs, leave as `" "` for no fill
 
-- `StringToSprite(string, effects)` : get a coloured/formatted version of a string compatible with display
-  - **string/effects** as string
+- `DrawText(pos, string, effects)` : get a coloured/formatted version of a string compatible with display
+  - **string/effects** as string, **pos** as (x, y)
+  - **pos** position
   - **string** string to convert with formatting
   - **effects** ANSI escape sequence colours for display (use FORMAT)
   - _Use DrawSprite() with the `chararray` as the returned value from StringToSprite()_
@@ -161,6 +162,8 @@ sprite = [
 - `Keyboard(key)` : returns True or False for whether or not a key is held. Uses `keyboard.is_pressed()`.
 
 - `GetMousePos(adjusted)` : returns mouse position (divided by font size if **adjusted**)
+
+- `UI.Input(pos, text)` : creates an `input(`text`)` @ pos
 
 ## Example Program
 ```python
