@@ -248,7 +248,7 @@ def draw(self):
 
 @master.OnUserCreate
 def setup(self):
-    self.title = "Snake : @ %fps%"
+    self.title = "Snake"
     self.geometry = (PLAY_AREA[0] * 4 + 2, PLAY_AREA[1] *  4 + 2)
 
     self.snake = [(PLAY_AREA[0] / 2, PLAY_AREA[1] / 2)]
