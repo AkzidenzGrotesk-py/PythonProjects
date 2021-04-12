@@ -1,7 +1,155 @@
-import os, time, keyboard, math, mouse
-from pynput.mouse import *
+import os, time, keyboard, math, mouse, json
+from numba import jit
 
-# FORMAT CAUSES MANY BUGS --> USE StringToSprite() to convert and apply colour
+# jit
+# Bresenham algorithm for generating lines
+@jit(nopython=True)
+def jitBresenham(start: tuple, end: tuple):
+    # Setup initial conditions
+    x1, y1 = start
+    x2, y2 = end
+    dx = x2 - x1
+    dy = y2 - y1
+
+    # Determine how steep the line is
+    is_steep = abs(dy) > abs(dx)
+
+    # Rotate line
+    if is_steep:
+        x1, y1 = y1, x1
+        x2, y2 = y2, x2
+
+    # Swap start and end points if necessary and store swap state
+    swapped = False
+    if x1 > x2:
+        x1, x2 = x2, x1
+        y1, y2 = y2, y1
+        swapped = True
+
+    # Recalculate differentials
+    dx = x2 - x1
+    dy = y2 - y1
+
+    # Calculate error
+    error = int(dx / 2.0)
+    ystep = 1 if y1 < y2 else -1
+
+    # Iterate over bounding box generating points between start and end
+    y = y1
+    points = []
+    for x in range(round(x1), round(x2 + 1)):
+        coord = (y, x) if is_steep else (x, y)
+        points.append(coord)
+        error -= abs(dy)
+        if error < 0:
+            y += ystep
+            error += dx
+
+    # Reverse the list if the coordinates were swapped
+    if swapped:
+        points.reverse()
+    return points
+
+# Mid point circle algorithm --> https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
+@jit(nopython=True)
+def jitMidPointCircle(centerpos: tuple, radius: int):
+    x = radius
+    y = 0
+    points = [(x + centerpos[0], y + centerpos[1])]
+
+    if radius > 0:
+        points.append((y + centerpos[0],   x + centerpos[1]))
+        points.append((y + centerpos[0],   centerpos[1] - x))
+        points.append((centerpos[0] - x,   y + centerpos[1]))
+
+    p = 1 - radius
+
+    while x > y:
+        y += 1
+        if p <= 0: p = p + 2 * y + 1
+        else: x -= 1;p = p + 2 * y - 2 * x + 1
+
+        if x < y: break
+
+        points.append((x + centerpos[0], y + centerpos[1]))
+        points.append((-x + centerpos[0], y + centerpos[1]))
+        points.append((x + centerpos[0], -y + centerpos[1]))
+        points.append((-x + centerpos[0], -y + centerpos[1]))
+
+        if x != y:
+            points.append((y + centerpos[0], x + centerpos[1]))
+            points.append((-y + centerpos[0], x + centerpos[1]))
+            points.append((y + centerpos[0], -x + centerpos[1]))
+            points.append((-y + centerpos[0], -x + centerpos[1]))
+
+    return points
+
+# Fill circle, gives warning
+@jit(nopython=True)
+def jitFillCircleWithEdge(points: tuple):
+    # Sort points into sublists by Y position
+    mpoints = points
+    mpoints.sort(key = lambda e: e[1])
+    spoints = []
+    psy = [p[1] for p in mpoints]
+    py = psy[0]
+    pc = 0
+
+    for c, y in enumerate(psy):
+        if y != py:
+            spoints.append(mpoints[pc:c])
+            pc = c
+            py = y
+
+    linesets = []
+    for y_sets in spoints:
+        x_set = [x[0] for x in y_sets]
+        pleft = min(x_set)
+        pright = max(x_set)
+        linesets.append([(pleft, y_sets[0][1]), (pright, y_sets[0][1])])
+
+    return linesets
+
+# Mathamatical functions from
+# http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
+# to fill in triangles (need fill flat bottom and top for this algorithm)
+@jit(nopython=True)
+def jitFillBottomFlatTriangle(v1: tuple, v2: tuple, v3: tuple):
+    invslope1 = (v2[0] - v1[0]) / (v2[1] - v1[1])
+    invslope2 = (v3[0] - v1[0]) / (v3[1] - v1[1])
+
+    curx1 = v1[0]
+    curx2 = v1[0]
+
+    outpoints = []
+    for scanlineY in range(v1[1], v2[1]):
+        outpoints.append([(curx1, scanlineY), (curx2, scanlineY)])
+        curx1 += invslope1
+        curx2 += invslope2
+
+    return outpoints
+
+@jit(nopython=True)
+def jitFillTopFlatTriangle(v1: tuple, v2: tuple, v3: tuple):
+    invslope1 = (v3[0] - v1[0]) / (v3[1] - v1[1])
+    invslope2 = (v3[0] - v2[0]) / (v3[1] - v2[1])
+
+    curx1 = v3[0]
+    curx2 = v3[0]
+
+    scanlineY = v3[1]
+    outpoints = []
+    while scanlineY > v1[1]:
+        outpoints.append([(curx1, scanlineY), (curx2, scanlineY)])
+        curx1 -= invslope1
+        curx2 -= invslope2
+
+        scanlineY -= 1
+
+    return outpoints
+
+
+# Console Engine Formatting
 class FORMAT:
     RESET=              "\033[0m"
     UNDERLINE=          "\033[4m"
@@ -49,24 +197,71 @@ class FORMAT:
     def BG_RGB(r:int, g:int, b:int) -> str:
         return f"\033[48;2;{r};{g};{b}m"
 
+# Console Engine Pixel Types
 class PIXEL_TYPE:
     PIXEL_SOLID = chr(0x2588)
     PIXEL_THREEQUARTERS = chr(0x2593)
     PIXEL_HALF = chr(0x2592)
     PIXEL_QUARTER = chr(0x2591)
 
-class vector:
-    def __init__(self, x = 0, y = 0, z = 0, w = 0):
-        self.x, self.y, self.z, self.w = x, y, z, w
+    LINE_VERT = "│"
+    LINE_HORZ = "─"
+    LINE_TOPL = "┌"
+    LINE_TOPR = "┐"
+    LINE_BTML = "└"
+    LINE_BTMR = "┘"
 
-    def __add__(self, e):
-        return vector(e.x + self.x, e.y + self.y, e.z + self.z, e.w + self.w)
+# Console Engine Debug
+class DEBUG:
+    @staticmethod
+    def CursorPos(x: int = 0, y: int = 0): print(f"\033[{y + 1};{x + 1}H", end = '')
+
+    @staticmethod
+    def ClearLines(n): print(f"\033[{n}M", end = '')
+
+    @staticmethod
+    def InsertLines(n): print(f"\033[{n}L", end = '')
+
+    @staticmethod
+    def HideCursor(): print("\033[?25l", end = '')
+
+    @staticmethod
+    def ShowCursor(): print("\033[?25h", end = '')
+
+    @staticmethod
+    def ClearThisLine(): DEBUG.ClearLines(1);DEBUG.InsertLines(1)
+
+class UI:
+    class xInput:
+        def __init__(self, parent, pos):
+            self.pos = pos
+            self.parent = parent
+            self.text = ""
+            self.isFocused = False
+
+        def Handle(self, inputtext = ""):
+            self.parent.Draw(self.pos, self.text)
+            if self.isFocused:
+                DEBUG.ShowCursor();DEBUG.CursorPos(*self.pos)
+                print(" " * len(self.text), end = '')
+                DEBUG.CursorPos(*self.pos)
+                self.text = input(inputtext)
+                DEBUG.HideCursor();DEBUG.CursorPos()
+                self.isFocused = False
+
+        def GetText(self):
+            return self.text
+
+    def Input(pos: tuple, text: str = "", mode: int = 0):
+        DEBUG.ShowCursor();DEBUG.CursorPos(pos[0], pos[1])
+        i = input(text)
+        DEBUG.HideCursor();DEBUG.CursorPos()
+        return i
 
 class ConsoleGame:
     def __init__(self):
         # Initialize variables
-        self.title = "%fps%"
-        self.fpsInTitle = True
+        self.title = "Console Game"
         self.geometry = (100, 100)
         self.emptychar = " "
         self.colorsetting = "0f"
@@ -81,16 +276,16 @@ class ConsoleGame:
         self.tp2 = time.monotonic()
 
     #
-    # DECORATER FUNCTIONS
+    # DECORATOR FUNCTIONS
     #
 
     # @self.OnUserCreate --> Executed once on initialization + decorated functions
     def OnUserCreate(self, func):
         func(self)
-        if self.title.replace("%fps%", "") == self.title: self.fpsInTitle = False
+        self.title = "ConsoleEngine: " + self.title + " - FPS: %fps%"
         # set title, window size and color & Hide cursor
         os.system(f"@echo off & title {self.title} & mode con:cols={self.geometry[0] + self.safeSizing} lines={self.geometry[1] + self.safeSizing} & color {self.colorsetting}")
-        print("\033[?25l")
+        DEBUG.HideCursor()
 
         # Regenerate root array
         self.root = [[self.emptychar for i in range(self.geometry[0])] for i in range(self.geometry[1])]
@@ -105,7 +300,7 @@ class ConsoleGame:
             self.fElapsedTime = elapsedTime
 
             # Update title
-            if self.fElapsedTime != 0 and self.fpsInTitle:
+            if self.fElapsedTime != 0:
                 os.system("title {}".format(self.title.replace("%fps%", str(round(1/self.fElapsedTime, 2)))))
 
             # Clear root array
@@ -118,118 +313,17 @@ class ConsoleGame:
             line = ""
             for i in self.root:
                 for j in i:
-                    line += j
+                    line += j # if j != "" else " "
                 line += "\n"
             print(line + "\033[H", end='')
 
     #
-    # NON DECORATION FUNCTIONS
+    # NON DECORATOR FUNCTIONS
     #
 
     # Reset root array
     def __ClearRoot(self):
         self.root = [[self.emptychar for i in range(self.geometry[0])] for i in range(self.geometry[1])]
-
-    # Bresenham algorithm for generating lines
-    def __Bresenham(self, start: tuple, end: tuple):
-        # Setup initial conditions
-        x1, y1 = start
-        x2, y2 = end
-        dx = x2 - x1
-        dy = y2 - y1
-
-        # Determine how steep the line is
-        is_steep = abs(dy) > abs(dx)
-
-        # Rotate line
-        if is_steep:
-            x1, y1 = y1, x1
-            x2, y2 = y2, x2
-
-        # Swap start and end points if necessary and store swap state
-        swapped = False
-        if x1 > x2:
-            x1, x2 = x2, x1
-            y1, y2 = y2, y1
-            swapped = True
-
-        # Recalculate differentials
-        dx = x2 - x1
-        dy = y2 - y1
-
-        # Calculate error
-        error = int(dx / 2.0)
-        ystep = 1 if y1 < y2 else -1
-
-        # Iterate over bounding box generating points between start and end
-        y = y1
-        points = []
-        for x in range(round(x1), round(x2 + 1)):
-            coord = (y, x) if is_steep else (x, y)
-            points.append(coord)
-            error -= abs(dy)
-            if error < 0:
-                y += ystep
-                error += dx
-
-        # Reverse the list if the coordinates were swapped
-        if swapped:
-            points.reverse()
-        return points
-
-    # Mid point circle algorithm --> https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
-    def __MidPointCircle(self, centerpos: tuple, radius: int):
-        x = radius
-        y = 0
-        points = [(x + centerpos[0], y + centerpos[1])]
-
-        if radius > 0:
-            points.append((y + centerpos[0],   x + centerpos[1]))
-            points.append((y + centerpos[0],   centerpos[1] - x))
-            points.append((centerpos[0] - x,   y + centerpos[1]))
-
-        p = 1 - radius
-
-        while x > y:
-            y += 1
-            if p <= 0: p = p + 2 * y + 1
-            else: x -= 1;p = p + 2 * y - 2 * x + 1
-
-            if x < y: break
-
-            points.append((x + centerpos[0], y + centerpos[1]))
-            points.append((-x + centerpos[0], y + centerpos[1]))
-            points.append((x + centerpos[0], -y + centerpos[1]))
-            points.append((-x + centerpos[0], -y + centerpos[1]))
-
-            if x != y:
-                points.append((y + centerpos[0], x + centerpos[1]))
-                points.append((-y + centerpos[0], x + centerpos[1]))
-                points.append((y + centerpos[0], -x + centerpos[1]))
-                points.append((-y + centerpos[0], -x + centerpos[1]))
-
-        return points
-
-    # Fill circle
-    def __FillCircleWithEdge(self, points: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, rawc: bool = False):
-        # Sort points into sublists by Y position
-        points.sort(key = lambda e: e[1])
-        spoints = []
-        psy = [p[1] for p in points]
-        py = psy[0]
-        pc = 0
-
-        for c, y in enumerate(psy):
-            if y != py:
-                spoints.append(points[pc:c])
-                pc = c
-                py = y
-
-        for y_sets in spoints:
-            x_set = [x[0] for x in y_sets]
-            pleft = min(*x_set)
-            pright = max(*x_set)
-            self.DrawRawLine((pleft, y_sets[0][1]), (pright, y_sets[0][1]), char = char, rawc = True)
 
     # Convert special character symbols from codes to string
     def __CharConvert(self, char: str):
@@ -241,35 +335,6 @@ class ConsoleGame:
             if lum == 1: char = "░"
 
         return char
-
-    # Mathamatical functions from
-    # http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
-    # to fill in triangles (need fill flat bottom and top for this algorithm)
-    def __FillBottomFlatTriangle(self, v1: tuple, v2: tuple, v3: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, rawc: bool = False):
-        invslope1 = (v2[0] - v1[0]) / (v2[1] - v1[1])
-        invslope2 = (v3[0] - v1[0]) / (v3[1] - v1[1])
-
-        curx1 = v1[0]
-        curx2 = v1[0]
-
-        for scanlineY in range(v1[1], v2[1]):
-            self.DrawRawLine((curx1, scanlineY), (curx2, scanlineY), char = char, rawc = True)
-            curx1 += invslope1
-            curx2 += invslope2
-    def __FillTopFlatTriangle(self, v1: tuple, v2: tuple, v3: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, rawc: bool = False):
-        invslope1 = (v3[0] - v1[0]) / (v3[1] - v1[1])
-        invslope2 = (v3[0] - v2[0]) / (v3[1] - v2[1])
-
-        curx1 = v3[0]
-        curx2 = v3[0]
-
-        scanlineY = v3[1]
-        while scanlineY > v1[1]:
-            self.DrawRawLine((curx1, scanlineY), (curx2, scanlineY), char = char, rawc = True)
-            curx1 -= invslope1
-            curx2 -= invslope2
-
-            scanlineY -= 1
 
     # Place a /char/ at /pos/, check pixel using /place/ --- /fsp/ forces all text into one string
     def Draw(self, pos: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, place: bool = True, rawc: bool = False, fsp: bool = False):
@@ -285,7 +350,9 @@ class ConsoleGame:
                     self.root[int(pos[1])][int(pos[0])+r] = c
                     r += 1
 
-            else: self.root[int(pos[1])][int(pos[0])] = char
+            else:
+                if char == "": char = " "
+                self.root[int(pos[1])][int(pos[0])] = char
         else:
             if self.root[int(pos[1])][int(pos[0])] == char:
                 return True
@@ -303,7 +370,7 @@ class ConsoleGame:
 
     # Draw a line from /pos1/ to /pos2/ with /char/ and use /rawc/ to toggle char conversion
     def DrawRawLine(self, pos1: tuple, pos2: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, rawc: bool = False):
-        for point in self.__Bresenham(pos1, pos2):
+        for point in jitBresenham(pos1, pos2):
             self.Draw(point, char, fsp = True)
 
     # Draw line /thickness/
@@ -350,6 +417,22 @@ class ConsoleGame:
             self.DrawLine((point3[0] - thickness + 1, point3[1]),
                             (point4[0] - thickness + 1, point4[1]),
                             char = char, rawc = True, thickness = thickness)
+    # Draw Edge Box
+    def DrawEdgeBox(self, pos: tuple, size: tuple):
+        point1 = pos
+        point2 = (pos[0], pos[1] + size[1])
+        point3 = (pos[0] + size[0], pos[1] + size[1])
+        point4 = (pos[0] + size[0], pos[1])
+
+        self.DrawRawLine(point1, point2, char = PIXEL_TYPE.LINE_VERT, rawc = True)
+        self.DrawRawLine(point2, point3, char = PIXEL_TYPE.LINE_HORZ, rawc = True)
+        self.DrawRawLine(point3, point4, char = PIXEL_TYPE.LINE_VERT, rawc = True)
+        self.DrawRawLine(point4, point1, char = PIXEL_TYPE.LINE_HORZ, rawc = True)
+
+        self.Draw(point1, char = PIXEL_TYPE.LINE_TOPL, fsp = True)
+        self.Draw(point2, char = PIXEL_TYPE.LINE_BTML, fsp = True)
+        self.Draw(point3, char = PIXEL_TYPE.LINE_BTMR, fsp = True)
+        self.Draw(point4, char = PIXEL_TYPE.LINE_TOPR, fsp = True)
 
     # Draw a triangle with points /pos1/ /pos2/ /pos3/ with /char/, /rawc/ to toggle char conversion.
     def DrawTriangle(self, pos1: tuple, pos2: tuple, pos3: tuple, char: str = PIXEL_TYPE.PIXEL_SOLID, fill: str = " ", thickness: int = 1, rawc: bool = False, rawf: bool = False):
@@ -359,13 +442,20 @@ class ConsoleGame:
 
         if fill != " " or rawf:
             if pos2[1] == pos3[1]:
-                self.__FillBottomFlatTriangle(pos1, pos2, pos3, char = fill, rawc = True)
+                for l in jitFillBottomFlatTriangle(pos1, pos2, pos3):
+                    self.DrawRawLine(l[0], l[1], char = fill, rawc = True)
+
             elif pos1[1] == pos2[1]:
-                self.__FillTopFlatTriangle(pos1, pos2, pos3, char = fill, rawc = True)
+                for l in jitFillTopFlatTriangle(pos1, pos2, pos3):
+                    self.DrawRawLine(l[0], l[1], char = fill, rawc = True)
             else:
                 pos4 = ((pos1[0] + ((pos2[1] - pos1[1]) / (pos3[1] - pos1[1])) * (pos3[0] - pos1[0])), pos2[1])
-                self.__FillBottomFlatTriangle(pos1, pos2, pos4, char = fill, rawc = True)
-                self.__FillTopFlatTriangle(pos2, pos4, pos3, char = fill, rawc = True)
+                for l in jitFillBottomFlatTriangle(pos1, pos2, pos4):
+                    self.DrawRawLine(l[0], l[1], char = fill, rawc = True)
+
+                for l in jitFillTopFlatTriangle(pos2, pos4, pos3):
+                    self.DrawRawLine(l[0], l[1], char = fill, rawc = True)
+
                 self.DrawRawLine(pos2, pos4, char = fill, rawc = True)
 
         if thickness == 1:
@@ -378,17 +468,26 @@ class ConsoleGame:
             self.DrawLine(pos1, pos3, char = char, rawc = True, thickness = thickness)
 
     # Draw sprite from array
-    def DrawSprite(self, pos: tuple, chararray: list = []):
+    def DrawSprite(self, pos: tuple, chararray = []):
+        if type(chararray) == dict:
+            chararray = chararray["sprite"]
+
         for y, line in enumerate(chararray):
             for x, pixel in enumerate(line):
                 if pixel != "": self.Draw((pos[0] + x, pos[1] + y), char = pixel, fsp = True)
 
+    # Load sprite from .spr file
+    def LoadSprite(self, name: str) -> dict:
+        with open(name + ".spr", "r") as sprite_file:
+            return json.load(sprite_file)
+
     # Circle centered at /centerpos/ with rad /radius/ drawn with /char/ and filled with /fill/
     def DrawCircle(self, centerpos: tuple, radius: int, char: str = PIXEL_TYPE.PIXEL_SOLID, fill: str = " ", rawc: bool = False, rawf: bool = False):
-        circleedge = self.__MidPointCircle(centerpos, radius)
+        circleedge = jitMidPointCircle(centerpos, radius)
 
         if fill != " " or rawf:
-            self.__FillCircleWithEdge(circleedge, char = fill, rawc = True)
+            for l in jitFillCircleWithEdge(circleedge):
+                self.DrawRawLine(l[0], l[1], char = fill, rawc = True)
 
         for point in circleedge:
             self.Draw(point, char, fsp = True)
@@ -400,6 +499,17 @@ class ConsoleGame:
             self.DrawLine(prv, p, char = char, thickness = thickness)
 
             prv = p
+
+    # Draw text
+    def DrawText(self, pos: tuple, text: list, effects: list):
+        drawx = 0
+        for i, e in enumerate(text):
+            if effects[i] == "":
+                self.Draw((pos[0] + drawx, pos[1]), e)
+            else:
+                self.DrawSprite((pos[0] + drawx, pos[1]), self.StringToSprite(e, effects[i]))
+
+            drawx += len(e)
 
     # Keyboard detection
     def Keyboard(self, key):
