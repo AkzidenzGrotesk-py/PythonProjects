@@ -22,7 +22,7 @@ circlesize = 14
 
 @game.OnUserCreate
 def setup(self):
-    self.title = "Hello World! - FPS: %fps%"
+    self.title = "Hello World!"
     self.geometry = (100, 100)
     self.clear = True
     self.safeSizing = 10
