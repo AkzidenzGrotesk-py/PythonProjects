@@ -101,7 +101,9 @@ pause
   
 - `RootArray(plan)` : this function replaces the screen array with your own custom one (must be done every frame)
   - **plan** as 2D array
-  
+
+- `LoadSprite(name)` : Load the JSON sprite from file `name`. The output of this can be loaded directly into `DrawSprite()`. Sprite files can be generated with `SpriteEditor.py`.
+
 - `DrawRawLine(pos1, pos2, char, rawc)` : draws a 1px line, use `DrawLine()`
   - **pos1/pos2** as (x, y), **char** as string
   - **pos1/pos2** start/end of line
@@ -131,7 +133,7 @@ pause
 - `DrawSprite(pos, chararray)` : draws a sprite
   - **pos** as (x, y), **chararray** as a 2d array
   - **pos** top-left position of sprite
-  - **chararray** sprite: of strings (each a pixel): `[["#","#"],["#","#"]]`
+  - **chararray** sprite: of strings (each a pixel): `[["#","#"],["#","#"]]`, you can also use the output of `LoadSprite()`.
   - **tip!** you can use colours with sprites, don't forget to reset after though:
 ``` python
 x = f"{FORMAT.FG_RED}{PIXEL_TYPE.PIXEL_SOLID}{FORMAT.RESET}"
