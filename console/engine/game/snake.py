@@ -240,7 +240,7 @@ def draw(self):
         self.Draw((self.geometry[0] / 2 - len(txt) / 2, self.geometry[1] / 2 + 2), txt)
 
         txt = f"PRESS [ SPACE ]"
-        self.DrawSprite((self.geometry[0] / 2 - len(txt) / 2, self.geometry[1] - 11), self.StringSpriteColour(txt, FORMAT.FG_YELLOW))
+        self.DrawSprite((self.geometry[0] / 2 - len(txt) / 2, self.geometry[1] - 11), self.StringToSprite(txt, FORMAT.FG_YELLOW))
         txt = "[ X ] TO QUIT"
         self.Draw((self.geometry[0] / 2 - len(txt) / 2, self.geometry[1] - 8), txt)
 
