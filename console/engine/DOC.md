@@ -92,7 +92,7 @@ pause
  
 - `OnUserUpdate(func)` : used to decorate for every frame, all deltatime, frame clearing and updating is handled by this function.  Passes the ConsoleGame to the function it decorates. 
 
-- `Pixel(pos, char, place, rawc, fsp)` : places or checks a pixel. 
+- `Draw(pos, char, place, rawc, fsp)` : places or checks a pixel. 
   - **pos** as (x, y), **char** as string, **place** as bool, **rawc** not used, **fsp** as bool
   - **pos** location to check/place a pixel 
   - **char** character to place, you can use PIXEL_TYPEs
@@ -159,7 +159,7 @@ sprite = [
   - **pos** position
   - **string** string to convert with formatting
   - **effects** ANSI escape sequence colours for display (use FORMAT)
-  - _Use DrawSprite() with the `chararray` as the returned value from StringToSprite()_
+  - _example: `DrawText((0, 0),["I'm Red! ", "I'm Blue!"],[FORMAT.FG_RED, FORMAT.FG_BLUE])`_
 
 - `Keyboard(key)` : returns True or False for whether or not a key is held. Uses `keyboard.is_pressed()`.
 
