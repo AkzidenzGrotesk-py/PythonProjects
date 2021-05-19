@@ -1,0 +1,38 @@
+entry #entrytable
+custom help : roll 1
+custom start : roll #random_encounters 1
+
+table d1 #entrytable
+1 Type 'start' to roll random encounters. Other tables: #random_combat table.
+.
+
+table d8 #random_encounters
+1 	Dead body in middle of trail.
+2 	Broken signpost pointing to imaginary trail.
+3 	Stray horse runs past the party.
+4 #flight_animals
+5 	A ruined and fallen carriage at the side of the trail.
+6 	A heavy mist covers the trail.
+7 	An unmarked diversion in the trail.
+8 #random_combat
+.
+
+table d6 #random_combat
+1 	(1d4+1) giant bats
+2 	(1d6+2) zombies
+3 	(1d4) skeleton horse riders
+4 	(2d6) tribal warriors
+5 	(2d4) owlbears
+6 	(2d4) twig blights, (1d4) vine blights
+.
+
+table d3 #flight_animals
+1 #flight_birds
+2 	Several dozen bats fly overhead.
+3 	Several hundred small flies fly past.
+.
+
+table d2 #flight_birds
+1 	Several dozen ravens fly overhead.
+2 	Several dozen sparrows fly overhead
+.
