@@ -26,3 +26,9 @@ rd = lambda dice, count, pad: print((("d" + str(dice) + (" " * ((pad - 1) - len(
 # rd(6, 3, 3)
 # . d6 d6 d6
 # . 3  4  5
+
+# Roll dice v2
+rd = lambda d: print((("d" + d.split("d")[1] + (" " * ((len(d.split("d")[1])+2 - 1) - len(d.split("d")[1])))) * int(d.split("d")[0])) + "\n" + "".join([(i + (" " * (len(d.split("d")[1])+2 - len(i)))) for i in [str(random.randrange(1, int(d.split("d")[1]) + 1)) for y in range(int(d.split("d")[0]))]]))
+# rd("2d4")
+# . d4 d4
+# . 3  1
