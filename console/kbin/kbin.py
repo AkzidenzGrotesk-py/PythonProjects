@@ -1,4 +1,5 @@
 import sys
+DEBUG = False
 CMDS = {
     "00000000" : "NULL", #   null
     "00000001" : "TTMP", # * move next set to temp memory
@@ -18,7 +19,12 @@ CMDS = {
     "00001111" : "PPTI", # * print to cmd, integer (next set)
     "00010000" : "SADD", # * add next set index memory to temp memory
     "00010001" : "SMIN", # * minus next set index memory to temp memory
-    "00010010" : "INPT", # * set input to temp mem
+    "00010010" : "INPT", #   set input to temp mem
+    "00010011" : "JUMP", # * go to command index
+    "00010100" : "BPTL", # * batch print literal char multi (next set until end)
+    "00010101" : "EPTL", #   end batch print literal
+    "00010110" : "CDIF", # * if condition start
+    "00010111" : "IFED", #   if condition end
 }
 NXTMEM = [
     "00000001",
@@ -35,6 +41,7 @@ NXTMEM = [
     "00001111",
     "00010000",
     "00010001",
+    "00010011",
 ]
 
 def int_to_8(value):
@@ -50,10 +57,6 @@ class KBin:
         with open(filename, "r") as bfile:
             self.text = bfile.readlines()
 
-        for j, t in enumerate(self.text):
-            self.text[j] = t.strip()
-        self.text = "".join(self.text)
-
         if filename.split(".")[1] == "rbn":
             self.read_raw_to_cmds()
         else:
@@ -67,38 +70,61 @@ class KBin:
 
     def read_to_commands(self):
         self.cmds = []
-        self.nxtliteral = False
+        self.nxtliteral = 0
+
+        for j, t in enumerate(self.text):
+            self.text[j] = t.strip()
+        self.text = "".join(self.text)
 
         for c in range(1, int(len(self.text) / 8)+1):
             cmd = self.text[(c-1)*8:c*8]
 
-            if self.nxtliteral:
+            if self.nxtliteral == 1:
                 self.cmds.append(int(cmd, 2))
-                self.nxtliteral = False
+                self.nxtliteral = 0
+            elif self.nxtliteral == 2:
+                if cmd == "00010101":
+                    self.cmds.append(CMDS[cmd])
+                    self.nxtliteral = 0
+                else:
+                    self.cmds.append(int(cmd, 2))
             else:
                 self.cmds.append(CMDS[cmd])
 
                 if cmd in NXTMEM:
-                    self.nxtliteral = True
+                    self.nxtliteral = 1
 
-            print("\033[35m" + str(c) + ":\033[0m\t" + self.text[(c-1)*8:c*8] + " (" + str(int(self.text[(c-1)*8:c*8], 2)) + ") -> \t" + str(self.cmds[-1]))
+                if cmd == "00010100": self.nxtliteral = 2
+
+            if DEBUG: print("\033[35m" + str(c) + ":\033[0m\t" + self.text[(c-1)*8:c*8] + " (" + str(int(self.text[(c-1)*8:c*8], 2)) + ") -> \t" + str(self.cmds[-1]))
 
     def read_raw_to_cmds(self):
         self.cmds = []
-        self.nxtliteral = False
+        self.nxtliteral = 0
+
+        # only allow pure literals
+        self.text = "".join(self.text)
+
         for i, c in enumerate(self.text):
             cmd = int_to_8(ord(c))
-            if self.nxtliteral:
+            if self.nxtliteral == 1:
                 self.cmds.append(int(cmd, 2))
-                self.nxtliteral = False
+                self.nxtliteral = 0
+            elif self.nxtliteral == 2:
+                if cmd == "00010101":
+                    self.cmds.append(CMDS[cmd])
+                    self.nxtliteral = 0
+                else:
+                    self.cmds.append(int(cmd, 2))
             else:
                 self.cmds.append(CMDS[cmd])
 
                 if cmd in NXTMEM:
-                    self.nxtliteral = True
+                    self.nxtliteral = 1
 
-            print("\033[35m" + str(i+1) + ":\033[0m\t" + cmd + " (" + str(int(cmd, 2)) + ") -> \t" + str(self.cmds[-1]))
+                if cmd == "00010100": self.nxtliteral = 2
 
+            if DEBUG: print("\033[35m" + str(i+1) + ":\033[0m\t" + cmd + " (" + str(int(cmd, 2)) + ") -> \t" + str(self.cmds[-1]))
 
     def exec_cmds(self):
         self.tempmem = 0
@@ -166,6 +192,18 @@ class KBin:
                 else:
                     self.error("input must be a natural number between (0-255).")
                     break
+            if self.cmds[self.cindex] == "JUMP":
+                self.cindex += 1
+                self.cindex = self.cmds[self.cindex]
+            if self.cmds[self.cindex] == "BPTL":
+                self.cindex += 1
+                toprt = ""
+                while self.cmds[self.cindex] != "EPTL":
+                    toprt += str(chr(self.cmds[self.cindex]))
+                    self.cindex += 1
+                self.cindex += 1
+
+                print("\033[33m" + str(toprt) + "\033[0m", end = '')
 
             while self.tempmem > 255: self.tempmem -= 256
 
