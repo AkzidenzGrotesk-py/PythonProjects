@@ -10,3 +10,6 @@ puts name.size
 puts "Hello, " + name.upcase # this will print "HELLO, DAVID"
 puts "Hello, ".upcase + name # this will print "HELLO, David"
 # .size, .upcase and .downcase
+# ; and () are also supported
+
+puts("; and () are also supported, #{this} is not supported");
