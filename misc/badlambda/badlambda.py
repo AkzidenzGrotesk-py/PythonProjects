@@ -32,3 +32,6 @@ rd = lambda d: print((("d" + d.split("d")[1] + (" " * ((len(d.split("d")[1])+2 -
 # rd("2d4")
 # . d4 d4
 # . 3  1
+
+# add colours
+rd = lambda d: print((("\033[33md" + d.split("d")[1] + (" " * ((len(d.split("d")[1])+2 - 1) - len(d.split("d")[1])))) * int(d.split("d")[0])) + "\033[37m\n" + "".join([(i + (" " * (len(d.split("d")[1])+2 - len(i)))) for i in [str(random.randrange(1, int(d.split("d")[1]) + 1)) for y in range(int(d.split("d")[0]))]]) + "\033[0m")
