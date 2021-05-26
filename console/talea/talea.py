@@ -96,10 +96,10 @@ class Talea:
         for r in t["results"]:
             compile = r.split("-")
             if len(compile) == 2:
-                if int(compile[0]) < int(roll) and int(compile[1]) > int(roll):
+                if int(compile[0]) <= int(roll) and int(compile[1]) >= int(roll):
                     self.deal_with_command(t["results"][r])
             else:
-                if int(compile[0]) == roll:
+                if int(compile[0]) == int(roll):
                     self.deal_with_command(t["results"][r])
 
     def run(self):
