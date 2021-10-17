@@ -1,4 +1,4 @@
-import forge_highlight_markdown, forge_find_replace
+import forge_highlighter, forge_find_replace
 
 #
 # This is what a Forge extension class should look like
@@ -26,7 +26,7 @@ import forge_highlight_markdown, forge_find_replace
 #         return {}
 #
 
-installed_extensions = [forge_highlight_markdown.ForgeHighlightMarkdown(), forge_find_replace.ForgeFindReplace()] # insert class initatiated
+installed_extensions = [forge_highlighter.ForgeHighlighter(), forge_find_replace.ForgeFindReplace()] # insert class initatiated
 
 class ForgeExtensionHandler:
     def __init__(self, forge):
