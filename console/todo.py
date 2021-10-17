@@ -163,6 +163,7 @@ class Dodo:
                 while msvcrt.kbhit(): msvcrt.getch()
                 if len(self.list) == self.selected:
                     ni = input("\033[?25h")
+                    self.selected += 1
                     self.list.append(ListItem(ni))
                 else:
                     ni = input(f"\033[?25h\033[{self.selected + 2}d\033[0K")
