@@ -2,22 +2,17 @@ def fmap(x, a, b, c, d)
   return (x - a) / (b - a) * (d - c) + c
 end
 
-def printf(str)
-  print str
-  $stdout.flush
-end
-
 def main
-  width = 25
-  height = 25
+  width = 50
+  height = 50
   max_iter = 150
   low = -2.0
   high = 2.0
 
   for x in 1..(width-1) do
     for y in 1..(height-1) do
-      b = fmap x, 0.0, width, low, high
-      a = fmap y, 0.0, height, low, high
+      b = fmap(x, 0.0, width, low, high)
+      a = fmap(y, 0.0, height, low, high)
       ca = a
       cb = b
 
@@ -33,45 +28,45 @@ def main
         z = n
       end
 
-      brightness = fmap z, 0.0, max_iter, 0.0, 255.0
+      brightness = fmap(z, 0.0, max_iter, 0.0, 255.0)
       if z == max_iter - 1
         brightness = 0
       end
 
       if brightness > 24
-        printf "@@"
+        print "@@"
       elsif brightness > 20
-        printf "%@"
+        print "%@"
       elsif brightness > 18
-        printf "%%"
+        print "%%"
       elsif brightness > 16
-        printf "#%"
+        print "#%"
       elsif brightness > 14
-        printf "##"
+        print "##"
       elsif brightness > 12
-        printf "*#"
+        print "*#"
       elsif brightness > 10
-        printf "**"
+        print "**"
       elsif brightness > 9
-        printf "+*"
+        print "+*"
       elsif brightness > 8
-        printf "++"
+        print "++"
       elsif brightness > 7
-        printf "=+"
+        print "=+"
       elsif brightness > 6
-        printf "=="
+        print "=="
       elsif brightness > 5
-        printf "-="
+        print "-="
       elsif brightness > 4
-        printf "--"
+        print "--"
       elsif brightness > 3
-        printf ".-"
+        print ".-"
       elsif brightness > 2
-        printf ".."
+        print ".."
       elsif brightness > 1
-        printf ". "
+        print ". "
       else
-        printf "  "
+        print "  "
       end
 
     end

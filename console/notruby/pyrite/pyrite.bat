@@ -1,2 +1,2 @@
-@echo off 
-python pyrite.py %1 %2 %3 
+@echo off
+python pyrite.py %1 %2 %3 %4

@@ -14,6 +14,7 @@ def main() -> None:
     out = 1 if "--out" in argv else 0
     show_consumes = 1 if "--shc" in argv else 0
     show_nodes = 1 if "--shn" in argv else 0
+    show_mem = 1 if "--mem" in argv else 0
     er_h = ErrorHandler()
 
     if len(argv) > 1:
@@ -22,7 +23,7 @@ def main() -> None:
                 code = "".join(code_file.readlines())
             tok = Tokenizer(code.replace("\\n", "\n"), er_h)
             con = Constructor(tok, er_h, show_consumes)
-            inte = Interpreter(con, er_h, out)
+            inte = Interpreter(con, er_h, out, show_mem)
             inte.execute(show_nodes)
 
     else:

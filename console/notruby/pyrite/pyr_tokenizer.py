@@ -199,6 +199,8 @@ class Tokenizer:
             case '*': return Token("MUL", "*")
             case '(': return Token("PRL", "(")
             case ')': return Token("PRR", ")")
+            case '[': return Token("SQL", "[")
+            case ']': return Token("SQR", "]")
             case '=': return Token("EQL", "=")
             case ';': return Token("SMC", ";")
             case ',': return Token("COM", ",")
@@ -207,6 +209,9 @@ class Tokenizer:
             case '>': return Token("GTH", ">")
             case '<': return Token("LTH", "<")
             case '!': return Token("NOT", "!")
+            case '{': return Token("CUL", "{")
+            case '}': return Token("CUR", "}")
+            case '|': return Token("PIP", "|")
 
         if self.cchar in VALID_CHARS:
             ident = self.collect_identity()

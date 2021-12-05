@@ -34,7 +34,12 @@ TOKENS = {
     "ORO" : "||",
     "NOT" : "!",
     "BOOL" : False,
-    "RANGE" : ".."
+    "RANGE" : "..",
+    "SQL" : "[",
+    "SQR" : "]",
+    "CUL" : "{",
+    "CUR" : "}",
+    "PIP" : "|",
 }
 VALID_CHARS = ascii_letters + ascii_digits + "_$"
 REPLACEMENTS = {
@@ -43,4 +48,4 @@ REPLACEMENTS = {
     None : "nil"
 }
 NOADD_TYPES = ["NONETYPE"]
-BREAK_OPERATIONS = ["break", "next", "redo", "retry"]
+BREAK_OPERATIONS = ["break", "next", "redo", "retry", "return", "yield"]
