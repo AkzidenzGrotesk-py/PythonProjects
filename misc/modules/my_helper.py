@@ -1,8 +1,18 @@
 '''Helper functions and variables
-checkxy_oob: check if an x, y position is within bounds
-generate_around: generate values "around" (and within bounds of) an x, y position.
-                 what to generate around is determined by the DIRS given.
-caret_H: quickly reset the cursor'''
+DIRS_ND:            adjecent positions
+DIRS_AL:            adjecent/diagonal positions
+DIRS_3x3:           adjecent/diagonal/current positions
+checkxy_oob:        check if an x, y position is within bounds
+generate_around:    generate values "around" (and within bounds of) an x, y position.
+                    what to generate around is determined by the DIRS given.
+caret_H:            quickly reset the cursor
+construct_mat:      generate a matrix width by height with value
+shape_mat:          generate a matrix with shape, filled with value
+print_len:          print object alongside its len()
+file_get:           get the contents of a file
+unduplicate:        remove duplicate values out of a list
+flatten:            2d matrix into 1d list'''
+from itertools import chain
 
 DIRS_ND = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 DIRS_AL = [(-1, -1), (0, -1), (1, -1),
@@ -35,3 +45,29 @@ def generate_around(x: int, y: int, lx: int, ly: int, around: list[tuple]) -> li
 def caret_H(x: int = 0, y: int = 0) -> None:
     '''Move text cursor in console.'''
     print(f"\033[{y};{x}H", end = "")
+
+def construct_mat(width: int, height: int, value: int = 0) -> list[list]:
+    '''Construct a matrix width by height containing value.'''
+    return [[value for _ in range(width)] for _ in range(height)]
+
+def shape_mat(mat: list[list], value: int = 0) -> list[list]:
+    '''Construct a matrix with the same shape as mat'''
+    return [[value for _ in line] for line in mat]
+
+def print_len(thing) -> None:
+    '''Print thing with the length'''
+    print(f"({len(thing)}) {thing}")
+
+def file_get(filename: str) -> str:
+    '''Get contents of a file'''
+    with open(filename, "r", encoding = "utf-8") as file:
+        contents = file.read()
+    return contents
+
+def unduplicate(thing: list) -> list:
+    '''Remove duplicates out of list'''
+    return list(dict.fromkeys(thing))
+
+def flatten(thing: list[list]) -> list:
+    '''Turn a matrix into a list'''
+    return list(chain.from_iterable(thing))
